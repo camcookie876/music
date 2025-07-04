@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Music & Microphone Speaker</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      text-align: center;
+      padding: 30px;
+    }
+    h1 {
+      color: #00ccff;
+      margin-bottom: 20px;
+    }
+    .song {
+      display: flex;
+      align-items: center;
+      margin: 15px auto;
+      max-width: 600px;
+      background: #222;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .song img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-right: 15px;
+    }
+    .song-title {
+      flex-grow: 1;
+      text-align: left;
+    }
+    audio {
+      width: 100%;
+      margin-top: 5px;
+    }
+    #micBtn {
+      margin-top: 30px;
+      padding: 15px 30px;
+      background-color: #00ccff;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      color: #000;
+      cursor: pointer;
+    }
+    #micBtn:hover {
+      background-color: #0099cc;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎵 Music & Mic Speaker</h1>
+  <div id="playlist"></div>
+  <button id="micBtn">🎤 Talk Mode</button>
+
+  <script>
+    const songs = [
+      ["AllStar", "AllStar.mp3", "AllStar.jpg"],
+      ["Be Someone", "Be Someone.mp3", "Be Someone.jpg"],
+      ["Cupid Shuffle (New Style)", "Cupid Shuffle (New Style).mp3", "Cupid Shuffle (New Style).jpg"],
+      ["Dynamite", "Dynamite.mp3", "Dynamite.jpg"],
+      ["Girls Like You", "Girls Like You.mp3", "Girls Like You.jpg"],
+      ["HandClap", "HandClap.mp3", "HandClap.jpg"],
+      ["If I Can't Have You", "If I Can't Have You.mp3", "If I Can't Have You.jpg"],
+      ["Just Dance - Lady Gaga", "Just Dance - Lady Gaga.mp3", "Just Dance - Lady Gaga.jpg"],
+      ["Made You Look", "Made You Look.mp3", "Made You Look.jpg"],
+      ["Oops!... I Did It Again", "Oops... I Did It Again.mp3", "Oops!... I Did It Again.jpg"],
+      ["Party Rock Anthem", "Party rock anthem.mp3", "Party Rock Anthem.jpg"],
+      ["Pink Pony Club", "Pink Pony Club.mp3", "Pink Pony Club.jpg"],
+      ["Run It", "Run It.mp3", "Run It.jpg"],
+      ["September", "September.mp3", "September.jpg"],
+      ["Shut Up and Dance", "Shut Up and Dance.mp3", "Shut Up and Dance.jpg"],
+      ["Sixteen", "Sixteen.mp3", "Sixteen.jpg"],
+      ["Sk8ter Boi", "Sk8ter Boi.mp3", "Sk8er Boi.jpg"],
+      ["Spice Up Your Life", "Spice Up Your Life.mp3", "Spice Up Your Life.jpg"],
+      ["Stars In The Sky", "stars in the sky.mp3", "Stars In The Sky.jpg"],
+      ["Sugar", "Sugar.mp3", "Sugar.jpg"],
+      ["Sunroof", "Sunroof.mp3", "Sunroof.jpg"],
+      ["tearin’ up my heart", "tearin’ up my heart.mp3", "tearin’ up my heart.jpg"],
+      ["Toxic", "Toxic.mp3", "Toxic.jpg"],
+      ["Welcome To New York", "Welcome To New York (Taylor's Version).mp3", "Welcome To New York (Taylor's Version).jpg"],
+      ["What A Girl Wants", "What A Girl Wants.mp3", "What a Girl Wants.jpg"],
+      ["Whistle", "Whistle.m3u", "Whistle.jpg"]
+    ];
+
+    const playlistDiv = document.getElementById("playlist");
+    let audioElements = [];
+
+    songs.forEach(([title, mp3, img]) => {
+      const songDiv = document.createElement("div");
+      songDiv.className = "song";
+
+      const image = document.createElement("img");
+      image.src = `assets/${img}`;
+      image.alt = title;
+
+      const infoDiv = document.createElement("div");
+      infoDiv.className = "song-title";
+      infoDiv.innerHTML = `<strong>${title}</strong><br><audio controls src="assets/${mp3}"></audio>`;
+
+      songDiv.appendChild(image);
+      songDiv.appendChild(infoDiv);
+      playlistDiv.appendChild(songDiv);
+
+      audioElements.push(infoDiv.querySelector("audio"));
+    });
+
+    // 🎤 Microphone logic
+    const micBtn = document.getElementById("micBtn");
+    let micOn = false;
+    let micStream;
+    let micSource;
+    let micOutput;
+
+    micBtn.addEventListener("click", async () => {
+      if (!micOn) {
+        // Pause all songs
+        audioElements.forEach(audio => audio.pause());
+
+        try {
+          micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const audioCtx = new AudioContext();
+          micSource = audioCtx.createMediaStreamSource(micStream);
+          micOutput = audioCtx.createMediaStreamDestination();
+
+          micSource.connect(audioCtx.destination); // Output to speakers
+          micBtn.textContent = "🔇 End Talk and Resume Music";
+          micOn = true;
+        } catch (err) {
+          alert("Microphone access denied or error.");
+        }
+      } else {
+        // Stop mic
+        micStream.getTracks().forEach(track => track.stop());
+        micBtn.textContent = "🎤 Talk Mode";
+        micOn = false;
+
+        // Resume all paused music
+        audioElements.forEach(audio => {
+          if (audio.currentTime > 0 && !audio.ended) {
+            audio.play();
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
