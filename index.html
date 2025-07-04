@@ -3,371 +3,395 @@
 <head>
   <meta charset="UTF-8" />
   <title>🎵 Camcookie Music</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    :root {
+      --bg-light: #fffae6;
+      --bg-dark: #001133;
+      --text-light: #333;
+      --text-dark: #fff;
+      --accent: #007acc;
+    }
+    [data-theme="light"] {
+      --bg: var(--bg-light);
+      --text: var(--text-light);
+    }
+    [data-theme="dark"] {
+      --bg: var(--bg-dark);
+      --text: var(--text-dark);
+    }
+
     html, body {
-      margin: 0;
-      padding: 0;
+      margin:0; padding:0;
       font-family: 'Segoe UI', sans-serif;
-      height: 100vh;
-      overflow: hidden;
-      background: #fff;
-      color: #333;
+      height:100vh; overflow:hidden;
+      background: var(--bg);
+      color: var(--text);
     }
 
     .panel {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at top left, #fffae6, #e6f7ff);
+      position:absolute; top:0; left:0;
+      width:100vw; height:100vh;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
       transition: background 0.5s ease;
+      background: var(--bg);
     }
 
     h1 {
-      margin: 0;
-      font-size: 2.2rem;
-      color: #007acc;
+      margin:0; font-size:2.2rem;
+      color: var(--accent);
     }
 
     #logo {
-      width: 80px; height: 80px;
-      margin: 15px 0;
+      width:80px; height:80px; margin:15px 0;
     }
 
     img.cover {
-      width: 240px; height: 240px;
-      object-fit: cover;
-      border-radius: 12px;
-      margin: 20px 0;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width:240px; height:240px;
+      object-fit:cover; border-radius:12px;
+      margin:20px 0;
+      box-shadow:0 4px 12px rgba(0,0,0,0.1);
     }
 
-    #songTitle {
-      font-size: 1.2rem;
-      margin: 8px 0;
-      text-align: center;
-    }
+    #songTitle { font-size:1.2rem; margin:8px 0; text-align:center; }
 
-    audio {
-      width: 80%; max-width: 400px;
-      opacity: 0;
-      transition: opacity 0.8s;
-      margin-top: 10px;
-    }
+    audio { display:none; }
 
     .controls {
-      margin-top: 18px;
-      display: flex; flex-wrap: wrap; gap: 10px;
+      display:flex; flex-wrap:wrap; gap:8px;
+      margin-top:12px; align-items:center;
     }
 
-    button {
-      background: #a0e7e5;
-      border: none;
-      padding: 10px 16px;
-      font-size: 1rem;
-      border-radius: 6px;
-      color: #333;
-      cursor: pointer;
-      transition: background 0.2s;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    .controls button,
+    .controls input[type="range"],
+    .controls a {
+      background: #a0e7e5; border:none; cursor:pointer;
+      padding:8px; border-radius:6px; font-size:1rem;
+      box-shadow:0 2px 6px rgba(0,0,0,0.1);
+      transition:background .2s;
+      color: var(--text);
+      text-decoration:none;
+    }
+    .controls button:hover,
+    .controls a:hover { background:#b4f8c8; }
+
+    .controls input[type="range"] { 
+      width:100px; -webkit-appearance:none; background:transparent;
+    }
+    .controls input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance:none; width:12px; height:12px;
+      border-radius:50%; background:var(--accent);
+    }
+    .controls input[type="range"]::-webkit-slider-runnable-track {
+      height:4px; background:#ccc; border-radius:2px;
     }
 
-    button:hover {
-      background: #b4f8c8;
+    #progress-container {
+      width:80%; max-width:400px; margin-top:16px;
+      display:flex; align-items:center; gap:8px;
     }
-
-    .liked { background: #ffd6a5 !important; }
-    .disliked { background: #ffadad !important; }
+    #progress {
+      flex:1; height:6px; background:#ddd;
+      border-radius:3px; cursor:pointer;
+      position:relative;
+    }
+    #progress .bar {
+      width:0%; height:100%; background:var(--accent);
+      border-radius:3px;
+    }
+    #time {
+      font-size:0.9rem;
+      width: 60px; text-align:right;
+    }
 
     #status {
-      position: absolute; top: 12px;
-      background: rgba(255,255,255,0.9);
-      padding: 8px 14px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      color: #555;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      position:absolute; top:12px; background:rgba(255,255,255,0.9);
+      padding:6px 10px; border-radius:6px; font-size:.9rem;
+      opacity:0; transition:opacity .3s;
+      pointer-events:none; box-shadow:0 2px 6px rgba(0,0,0,0.1);
+      color: var(--text);
     }
 
+    /* Playlist overlay */
     #playlistOverlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(255, 255, 255, 0.95);
-      z-index: 1000;
-      flex-direction: column;
-      align-items: center;
-      padding: 30px 20px;
+      display:none;
+      position:fixed; top:0; left:0;
+      width:100vw; height:100vh;
+      background: rgba(255,255,255,0.95);
+      z-index:1000; flex-direction:column; align-items:center;
+      padding:30px 20px; overflow-y:auto;
     }
-
     #playlistOverlay .header {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 16px;
+      width:100%; display:flex; justify-content:space-between;
+      margin-bottom:16px;
     }
-
-    #playlistOverlay .header button {
-      background: #ffc6ff;
-    }
-
+    #playlistOverlay .header button { background:#ffc6ff; }
     #playlist {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      width: 100%;
-      max-width: 500px;
-      flex: 1;
-      overflow-y: auto;
-      border-top: 1px solid #ddd;
-      border-bottom: 1px solid #ddd;
+      list-style:none; padding:0; margin:0;
+      width:100%; max-width:500px;
     }
-
     #playlist li {
-      padding: 12px 16px;
-      border-bottom: 1px solid #eee;
-      cursor: pointer;
-      transition: background 0.2s;
+      padding:12px 16px; border-bottom:1px solid #eee;
+      cursor:pointer; transition:background .2s;
+      color:var(--text);
     }
+    #playlist li:hover { background:#f0f8ff; }
 
-    #playlist li:hover {
-      background: #f0f8ff;
-    }
-
-    #playlist::-webkit-scrollbar {
-      width: 8px;
-    }
-    #playlist::-webkit-scrollbar-track {
-      background: #f7f7f7;
-    }
+    /* Scrollbar */
+    #playlist::-webkit-scrollbar { width:8px; }
+    #playlist::-webkit-scrollbar-track { background:#f7f7f7; }
     #playlist::-webkit-scrollbar-thumb {
-      background: #ccc;
-      border-radius: 4px;
+      background:#ccc; border-radius:4px;
     }
   </style>
 </head>
-<body>
-
+<body data-theme="light">
   <div class="panel" id="mainPanel">
     <div id="status">Status</div>
-    <img id="logo" src="library/Camcookie-logo.png" alt="Logo" />
+    <img id="logo" src="https://camcookie876.github.io/music/library/Camcookie-logo.png" alt="Logo" />
     <h1>🎧 Camcookie Music</h1>
     <img id="cover" class="cover" src="" alt="Album Cover" />
     <div id="songTitle">Loading…</div>
-    <audio id="audio" autoplay></audio>
+    <audio id="audio"></audio>
+
+    <div id="progress-container">
+      <div id="progress"><div class="bar"></div></div>
+      <div id="time">0:00</div>
+    </div>
 
     <div class="controls">
-      <button onclick="prevSong()">⏮️</button>
-      <button onclick="togglePlay()">⏯️</button>
-      <button onclick="nextSong()">⏭️</button>
-      <button id="likeBtn" onclick="likeSong()">👍</button>
-      <button id="dislikeBtn" onclick="dislikeSong()">👎</button>
-      <button onclick="toggleMic()">🎤</button>
-      <button onclick="openPlaylist()">📜</button>
+      <button id="prev">⏮️</button>
+      <button id="play">▶️</button>
+      <button id="next">⏭️</button>
+      <button id="shuffle">🔀</button>
+      <button id="repeat">🔁</button>
+      <input id="volume" type="range" min="0" max="1" step="0.01" />
+      <a id="download" href="#" download>⬇️</a>
+      <button id="theme">🌓</button>
+      <button id="openPl">📜</button>
     </div>
   </div>
 
   <div id="playlistOverlay" class="panel">
     <div class="header">
-      <button onclick="closePlaylist()">✖️ Close</button>
-      <button onclick="startPlaylist()">▶️ Play All</button>
+      <button id="closePl">✖️ Close</button>
+      <button id="playAll">▶️ Play All</button>
     </div>
     <ul id="playlist"></ul>
   </div>
 
   <script>
-    const baseURL     = "library/";
-    const audio       = document.getElementById("audio");
-    const cover       = document.getElementById("cover");
-    const title       = document.getElementById("songTitle");
-    const panel       = document.getElementById("mainPanel");
-    const likeBtn     = document.getElementById("likeBtn");
-    const dislikeBtn  = document.getElementById("dislikeBtn");
-    const status      = document.getElementById("status");
-    const overlay     = document.getElementById("playlistOverlay");
-    const playlistEl  = document.getElementById("playlist");
+    // Element refs
+    const audio   = document.getElementById("audio");
+    const cover   = document.getElementById("cover");
+    const title   = document.getElementById("songTitle");
+    const panel   = document.getElementById("mainPanel");
+    const status  = document.getElementById("status");
+    const progressBar = document.querySelector("#progress .bar");
+    const progressContainer = document.getElementById("progress");
+    const timeDisplay = document.getElementById("time");
 
-    let currentIndex  = -1;
+    const btnPlay = document.getElementById("play");
+    const btnPrev = document.getElementById("prev");
+    const btnNext = document.getElementById("next");
+    const btnShuffle = document.getElementById("shuffle");
+    const btnRepeat  = document.getElementById("repeat");
+    const volumeSlider = document.getElementById("volume");
+    const downloadBtn = document.getElementById("download");
+    const btnTheme = document.getElementById("theme");
+    const btnOpenPl = document.getElementById("openPl");
+    const btnClosePl = document.getElementById("closePl");
+    const btnPlayAll = document.getElementById("playAll");
+    const overlay = document.getElementById("playlistOverlay");
+    const playlistEl = document.getElementById("playlist");
+
+    // State
+    let currentIndex = -1;
+    let isPlaying    = false;
+    let isShuffle    = false;
+    let isRepeat     = false;
+    let playlistMode = false;
     let likedSongs    = JSON.parse(localStorage.getItem("likedSongs")    || "[]");
     let dislikedSongs = JSON.parse(localStorage.getItem("dislikedSongs") || "[]");
-    let micStream     = null;
-    let playlistMode  = false;
 
     const songs = [
-      ["AllStar","AllStar.mp3","AllStar.jpg","pop"],
-      ["Be Someone","Be Someone.mp3","Be Someone.jpg","indie"],
-      ["Cupid Shuffle","Cupid Shuffle (New Style).mp3","Cupid Shuffle (New Style).jpg","dance"],
-      ["Dynamite","Dynamite.mp3","Dynamite.jpg","pop"],
-      ["Girls Like You","Girls Like You.mp3","Girls Like You.jpg","romance"],
-      ["HandClap","HandClap.mp3","HandClap.jpg","rock"],
-      ["Sugar","Sugar.mp3","Sugar.jpg","pop"],
-      ["Sunroof","Sunroof.mp3","Sunroof.jpg","indie"],
-      ["Sk8ter Boi","Sk8ter Boi.mp3","Sk8er Boi.jpg","punk"],
-      ["What A Girl Wants","What A Girl Wants.mp3","What a Girl Wants.jpg","romance"],
-      ["Stars in the Sky","stars in the sky.mp3","Stars In The Sky.jpg","electro"],
-      ["Party Rock Anthem","Party rock anthem.mp3","Party Rock Anthem.jpg","dance"]
+      ["AllStar", "https://camcookie876.github.io/music/library/AllStar.mp3", "https://camcookie876.github.io/music/library/AllStar.jpg", "pop"],
+      ["Be Someone", "https://camcookie876.github.io/music/library/Be Someone.mp3", "https://camcookie876.github.io/music/library/Be Someone.jpg", "indie"],
+      ["Cupid Shuffle", "https://camcookie876.github.io/music/library/Cupid Shuffle (New Style).mp3", "https://camcookie876.github.io/music/library/Cupid Shuffle (New Style).jpg", "dance"],
+      ["Dynamite", "https://camcookie876.github.io/music/library/Dynamite.mp3", "https://camcookie876.github.io/music/library/Dynamite.jpg", "pop"],
+      ["Girls Like You", "https://camcookie876.github.io/music/library/Girls Like You.mp3", "https://camcookie876.github.io/music/library/Girls Like You.jpg", "romance"],
+      ["HandClap", "https://camcookie876.github.io/music/library/HandClap.mp3", "https://camcookie876.github.io/music/library/HandClap.jpg", "rock"],
+      ["Sugar", "https://camcookie876.github.io/music/library/Sugar.mp3", "https://camcookie876.github.io/music/library/Sugar.jpg", "pop"],
+      ["Sunroof", "https://camcookie876.github.io/music/library/Sunroof.mp3", "https://camcookie876.github.io/music/library/Sunroof.jpg", "indie"],
+      ["Sk8ter Boi", "https://camcookie876.github.io/music/library/Sk8ter Boi.mp3", "https://camcookie876.github.io/music/library/Sk8er Boi.jpg", "punk"],
+      ["What A Girl Wants", "https://camcookie876.github.io/music/library/What A Girl Wants.mp3", "https://camcookie876.github.io/music/library/What a Girl Wants.jpg", "romance"],
+      ["Stars in the Sky", "https://camcookie876.github.io/music/library/stars in the sky.mp3", "https://camcookie876.github.io/music/library/Stars In The Sky.jpg", "electro"],
+      ["Party Rock Anthem", "https://camcookie876.github.io/music/library/Party rock anthem.mp3", "https://camcookie876.github.io/music/library/Party Rock Anthem.jpg", "dance"]
     ];
 
     const genreThemes = {
-      pop:      "#ffe4e1",
-      indie:    "#e6ffe6",
-      dance:    "#fff0e6",
-      punk:     "#ffe6f2",
-      romance:  "#fff0f5",
-      rock:     "#e6f2ff",
-      electro:  "#f0f8ff"
+      pop:    "#ffe4e1",
+      indie:  "#e6ffe6",
+      dance:  "#fff0e6",
+      punk:   "#ffe6f2",
+      romance:"#fff0f5",
+      rock:   "#e6f2ff",
+      electro:"#f0f8ff"
     };
 
     function showStatus(txt) {
       status.textContent = txt;
       status.style.opacity = 1;
-      clearTimeout(status._hideTimeout);
-      status._hideTimeout = setTimeout(() => status.style.opacity = 0, 1800);
-    }
-
-    function fadeInAudio() {
-      audio.volume = 0; audio.style.opacity = 1;
-      let iv = setInterval(() => {
-        if (audio.volume < 1) audio.volume += 0.05;
-        else clearInterval(iv);
-      }, 100);
-    }
-
-    function fadeOutAudio(cb) {
-      let iv = setInterval(() => {
-        if (audio.volume > 0.05) audio.volume -= 0.05;
-        else {
-          clearInterval(iv);
-          audio.pause();
-          audio.style.opacity = 0;
-          cb();
-        }
-      }, 100);
+      clearTimeout(status._hide);
+      status._hide = setTimeout(()=> status.style.opacity=0,1500);
     }
 
     function loadSong(i) {
-      const [name,file,img,genre] = songs[i];
-      audio.src   = baseURL + file;
-      cover.src   = baseURL + img;
-      title.textContent   = name;
-      panel.style.background = genreThemes[genre] || "#fffae6";
-      updateLikeButtons(i);
+      currentIndex = i;
+      const [name, src, img, genre] = songs[i];
+      audio.src = src;
+      cover.src = img;
+      title.textContent = name;
+      panel.style.background = genreThemes[genre] || "";
+      downloadBtn.href = src;
+      downloadBtn.download = name + ".mp3";
+      updateButtons();
     }
 
-    function playRandom() {
-      const opts = songs.filter((_,i) => !dislikedSongs.includes(i));
-      if (!opts.length) return showStatus("😅 All songs disliked!");
-      const pick = Math.floor(Math.random()*opts.length);
-      currentIndex = songs.indexOf(opts[pick]);
-      loadSong(currentIndex);
-      setTimeout(() => { audio.play(); fadeInAudio() }, 300);
+    function playSong() {
+      audio.play();
+      isPlaying = true;
+      btnPlay.textContent = "⏸️";
+      showStatus("▶️ Playing");
+    }
+
+    function pauseSong() {
+      audio.pause();
+      isPlaying = false;
+      btnPlay.textContent = "▶️";
+      showStatus("⏸️ Paused");
     }
 
     function togglePlay() {
-      audio.paused
-        ? (audio.play(), fadeInAudio())
-        : fadeOutAudio(()=>{});
+      isPlaying ? pauseSong() : playSong();
     }
 
-    function nextSong() {
-      if (playlistMode) {
-        currentIndex = (currentIndex + 1) % songs.length;
-        loadSong(currentIndex);
-        setTimeout(()=>{ audio.play(); fadeInAudio() }, 200);
+    function nextTrack() {
+      if (isShuffle) {
+        playRandom();
       } else {
-        fadeOutAudio(playRandom);
+        let idx = (currentIndex + 1) % songs.length;
+        loadSong(idx);
+        playSong();
       }
     }
 
-    function prevSong() {
-      if (!playlistMode) return;
-      currentIndex = (currentIndex - 1 + songs.length) % songs.length;
-      loadSong(currentIndex);
-      setTimeout(()=>{ audio.play(); fadeInAudio() }, 200);
+    function prevTrack() {
+      let idx = (currentIndex - 1 + songs.length) % songs.length;
+      loadSong(idx);
+      playSong();
     }
 
-    function likeSong() {
-      if (!likedSongs.includes(currentIndex)) likedSongs.push(currentIndex);
-      dislikedSongs = dislikedSongs.filter(i => i !== currentIndex);
-      savePrefs(); updateLikeButtons(currentIndex); showStatus("👍 Liked");
+    function playRandom() {
+      let opts = songs.map((_,i)=>i).filter(i=>i!==currentIndex);
+      let idx = opts[Math.floor(Math.random()*opts.length)];
+      loadSong(idx);
+      playSong();
     }
 
-    function dislikeSong() {
-      if (!dislikedSongs.includes(currentIndex)) dislikedSongs.push(currentIndex);
-      likedSongs = likedSongs.filter(i => i !== currentIndex);
-      savePrefs(); updateLikeButtons(currentIndex); showStatus("👎 Disliked");
-      if (!playlistMode) nextSong();
+    function toggleShuffle() {
+      isShuffle = !isShuffle;
+      btnShuffle.style.opacity = isShuffle?1:0.5;
+      showStatus(`🔀 Shuffle ${isShuffle?"On":"Off"}`);
     }
 
-    function updateLikeButtons(i) {
-      likeBtn.  classList.toggle("liked",    likedSongs.includes(i));
-      dislikeBtn.classList.toggle("disliked", dislikedSongs.includes(i));
+    function toggleRepeat() {
+      isRepeat = !isRepeat;
+      audio.loop = isRepeat;
+      btnRepeat.style.opacity = isRepeat?1:0.5;
+      showStatus(`🔁 Repeat ${isRepeat?"On":"Off"}`);
     }
 
-    function savePrefs() {
-      localStorage.setItem("likedSongs",    JSON.stringify(likedSongs));
-      localStorage.setItem("dislikedSongs", JSON.stringify(dislikedSongs));
+    function updateProgress() {
+      const percent = (audio.currentTime / audio.duration) * 100;
+      progressBar.style.width = percent + "%";
+      let m = Math.floor(audio.currentTime/60);
+      let s = Math.floor(audio.currentTime%60).toString().padStart(2,"0");
+      timeDisplay.textContent = `${m}:${s}`;
     }
 
-    function toggleMic() {
-      if (micStream) {
-        micStream.getTracks().forEach(t=>t.stop());
-        micStream = null;
-        audio.play(); fadeInAudio(); showStatus("🎤 Mic OFF");
-      } else {
-        fadeOutAudio(() => {
-          navigator.mediaDevices.getUserMedia({audio:true})
-            .then(stream => {
-              micStream = stream;
-              const ctx = new AudioContext();
-              ctx.createMediaStreamSource(stream).connect(ctx.destination);
-              showStatus("🎤 Mic ON");
-            })
-            .catch(() => showStatus("⚠️ Mic error"));
-        });
-      }
+    function setProgress(e) {
+      let rect = progressContainer.getBoundingClientRect();
+      let pct = (e.clientX - rect.left) / rect.width;
+      audio.currentTime = pct * audio.duration;
     }
 
-    function openPlaylist()  { overlay.style.display = "flex"; }
-    function closePlaylist() { overlay.style.display = "none"; }
+    function updateVolume(e) {
+      audio.volume = e.target.value;
+    }
 
+    function toggleTheme() {
+      let root = document.body;
+      let t = root.getAttribute("data-theme") === "light" ? "dark":"light";
+      root.setAttribute("data-theme", t);
+    }
+
+    function updateButtons() {
+      btnShuffle.style.opacity= isShuffle?1:0.5;
+      btnRepeat.style.opacity = isRepeat?1:0.5;
+    }
+
+    // Playlist UI
     function buildPlaylist() {
-      songs.forEach((s,i) => {
-        const li = document.createElement("li");
+      songs.forEach((s,i)=>{
+        let li = document.createElement("li");
         li.textContent = s[0];
-        li.onclick     = () => playFromIndex(i);
-        playlistEl.appendChild(li);
+        li.onclick =()=>{ playlistMode=true; loadSong(i); playSong(); closePl(); };
+        playlistEl.append(li);
       });
     }
+    function openPl(){ overlay.style.display="flex" }
+    function closePl(){ overlay.style.display="none" }
+    function playAll(){ playlistMode=true; loadSong(0); playSong(); closePl(); }
 
-    function playFromIndex(i) {
-      playlistMode = true;
-      currentIndex = i;
-      loadSong(i);
-      audio.play(); fadeInAudio();
-      closePlaylist();
-    }
+    // Event listeners
+    btnPlay.onclick    = togglePlay;
+    btnPrev.onclick    = prevTrack;
+    btnNext.onclick    = nextTrack;
+    btnShuffle.onclick = toggleShuffle;
+    btnRepeat.onclick  = toggleRepeat;
+    btnTheme.onclick   = toggleTheme;
+    btnOpenPl.onclick  = openPl;
+    btnClosePl.onclick = closePl;
+    btnPlayAll.onclick = playAll;
 
-    function startPlaylist() {
-      playlistMode = true;
-      currentIndex = 0;
-      loadSong(0);
-      audio.play(); fadeInAudio();
-      closePlaylist();
-    }
+    audio.ontimeupdate = updateProgress;
+    audio.onended      = ()=>{ if(!isRepeat) nextTrack(); };
 
-    audio.onended = nextSong;
+    progressContainer.onclick = setProgress;
+    volumeSlider.oninput      = updateVolume;
 
+    // keyboard
+    document.addEventListener("keydown", e=>{
+      if(e.target.tagName==="INPUT") return;
+      switch(e.code){
+        case "Space": e.preventDefault(); togglePlay(); break;
+        case "ArrowRight": nextTrack(); break;
+        case "ArrowLeft": prevTrack(); break;
+        case "ArrowUp": audio.volume=Math.min(1,audio.volume+0.1); volumeSlider.value=audio.volume; break;
+        case "ArrowDown": audio.volume=Math.max(0,audio.volume-0.1); volumeSlider.value=audio.volume; break;
+        case "KeyS": toggleShuffle(); break;
+        case "KeyR": toggleRepeat(); break;
+        case "KeyT": toggleTheme(); break;
+      }
+    });
+
+    // Init
     buildPlaylist();
-    playRandom();
+    volumeSlider.value = 1;
+    toggleShuffle(); toggleRepeat();
+    loadSong(0);
   </script>
 </body>
 </html>
