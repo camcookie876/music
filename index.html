@@ -5,7 +5,6 @@
   <title>🎵 Camcookie Music</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    /* Base reset */
     html, body {
       margin: 0;
       padding: 0;
@@ -16,7 +15,6 @@
       color: #333;
     }
 
-    /* Main player panel */
     .panel {
       position: absolute;
       top: 0; left: 0;
@@ -98,7 +96,6 @@
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-    /* Playlist overlay */
     #playlistOverlay {
       display: none;
       position: fixed;
@@ -145,7 +142,6 @@
       background: #f0f8ff;
     }
 
-    /* Custom scrollbar (WebKit) */
     #playlist::-webkit-scrollbar {
       width: 8px;
     }
@@ -162,7 +158,7 @@
 
   <div class="panel" id="mainPanel">
     <div id="status">Status</div>
-    <img id="logo" src="assets/Camcookie-logo.png" alt="Logo" />
+    <img id="logo" src="library/Camcookie-logo.png" alt="Logo" />
     <h1>🎧 Camcookie Music</h1>
     <img id="cover" class="cover" src="" alt="Album Cover" />
     <div id="songTitle">Loading…</div>
@@ -188,16 +184,16 @@
   </div>
 
   <script>
-    const baseURL = "assets/";
-    const audio     = document.getElementById("audio");
-    const cover     = document.getElementById("cover");
-    const title     = document.getElementById("songTitle");
-    const panel     = document.getElementById("mainPanel");
-    const likeBtn   = document.getElementById("likeBtn");
-    const dislikeBtn= document.getElementById("dislikeBtn");
-    const status    = document.getElementById("status");
-    const overlay   = document.getElementById("playlistOverlay");
-    const playlistEl= document.getElementById("playlist");
+    const baseURL     = "library/";
+    const audio       = document.getElementById("audio");
+    const cover       = document.getElementById("cover");
+    const title       = document.getElementById("songTitle");
+    const panel       = document.getElementById("mainPanel");
+    const likeBtn     = document.getElementById("likeBtn");
+    const dislikeBtn  = document.getElementById("dislikeBtn");
+    const status      = document.getElementById("status");
+    const overlay     = document.getElementById("playlistOverlay");
+    const playlistEl  = document.getElementById("playlist");
 
     let currentIndex  = -1;
     let likedSongs    = JSON.parse(localStorage.getItem("likedSongs")    || "[]");
@@ -221,13 +217,13 @@
     ];
 
     const genreThemes = {
-      pop: "#ffe4e1",
-      indie: "#e6ffe6",
-      dance: "#fff0e6",
-      punk: "#ffe6f2",
-      romance: "#fff0f5",
-      rock: "#e6f2ff",
-      electro: "#f0f8ff"
+      pop:      "#ffe4e1",
+      indie:    "#e6ffe6",
+      dance:    "#fff0e6",
+      punk:     "#ffe6f2",
+      romance:  "#fff0f5",
+      rock:     "#e6f2ff",
+      electro:  "#f0f8ff"
     };
 
     function showStatus(txt) {
@@ -240,14 +236,14 @@
     function fadeInAudio() {
       audio.volume = 0; audio.style.opacity = 1;
       let iv = setInterval(() => {
-        if (audio.volume < 1) audio.volume = Math.min(1, audio.volume + .05);
+        if (audio.volume < 1) audio.volume += 0.05;
         else clearInterval(iv);
       }, 100);
     }
 
     function fadeOutAudio(cb) {
       let iv = setInterval(() => {
-        if (audio.volume > .05) audio.volume -= .05;
+        if (audio.volume > 0.05) audio.volume -= 0.05;
         else {
           clearInterval(iv);
           audio.pause();
@@ -258,10 +254,10 @@
     }
 
     function loadSong(i) {
-      const [name, file, img, genre] = songs[i];
-      audio.src = baseURL + file;
-      cover.src = baseURL + img;
-      title.textContent = name;
+      const [name,file,img,genre] = songs[i];
+      audio.src   = baseURL + file;
+      cover.src   = baseURL + img;
+      title.textContent   = name;
       panel.style.background = genreThemes[genre] || "#fffae6";
       updateLikeButtons(i);
     }
@@ -269,21 +265,23 @@
     function playRandom() {
       const opts = songs.filter((_,i) => !dislikedSongs.includes(i));
       if (!opts.length) return showStatus("😅 All songs disliked!");
-      const pick = Math.floor(Math.random() * opts.length);
+      const pick = Math.floor(Math.random()*opts.length);
       currentIndex = songs.indexOf(opts[pick]);
       loadSong(currentIndex);
       setTimeout(() => { audio.play(); fadeInAudio() }, 300);
     }
 
     function togglePlay() {
-      audio.paused ? (audio.play(), fadeInAudio()) : fadeOutAudio(() => {});
+      audio.paused
+        ? (audio.play(), fadeInAudio())
+        : fadeOutAudio(()=>{});
     }
 
     function nextSong() {
       if (playlistMode) {
         currentIndex = (currentIndex + 1) % songs.length;
         loadSong(currentIndex);
-        setTimeout(() => { audio.play(); fadeInAudio() }, 200);
+        setTimeout(()=>{ audio.play(); fadeInAudio() }, 200);
       } else {
         fadeOutAudio(playRandom);
       }
@@ -293,7 +291,7 @@
       if (!playlistMode) return;
       currentIndex = (currentIndex - 1 + songs.length) % songs.length;
       loadSong(currentIndex);
-      setTimeout(() => { audio.play(); fadeInAudio() }, 200);
+      setTimeout(()=>{ audio.play(); fadeInAudio() }, 200);
     }
 
     function likeSong() {
@@ -310,7 +308,7 @@
     }
 
     function updateLikeButtons(i) {
-      likeBtn.classList.toggle("liked", likedSongs.includes(i));
+      likeBtn.  classList.toggle("liked",    likedSongs.includes(i));
       dislikeBtn.classList.toggle("disliked", dislikedSongs.includes(i));
     }
 
@@ -321,12 +319,12 @@
 
     function toggleMic() {
       if (micStream) {
-        micStream.getTracks().forEach(t => t.stop());
+        micStream.getTracks().forEach(t=>t.stop());
         micStream = null;
         audio.play(); fadeInAudio(); showStatus("🎤 Mic OFF");
       } else {
         fadeOutAudio(() => {
-          navigator.mediaDevices.getUserMedia({ audio: true })
+          navigator.mediaDevices.getUserMedia({audio:true})
             .then(stream => {
               micStream = stream;
               const ctx = new AudioContext();
@@ -338,19 +336,14 @@
       }
     }
 
-    function openPlaylist() {
-      overlay.style.display = "flex";
-    }
-
-    function closePlaylist() {
-      overlay.style.display = "none";
-    }
+    function openPlaylist()  { overlay.style.display = "flex"; }
+    function closePlaylist() { overlay.style.display = "none"; }
 
     function buildPlaylist() {
-      songs.forEach((s, i) => {
+      songs.forEach((s,i) => {
         const li = document.createElement("li");
         li.textContent = s[0];
-        li.onclick = () => playFromIndex(i);
+        li.onclick     = () => playFromIndex(i);
         playlistEl.appendChild(li);
       });
     }
@@ -373,7 +366,6 @@
 
     audio.onended = nextSong;
 
-    // initialize
     buildPlaylist();
     playRandom();
   </script>
