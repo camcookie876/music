@@ -2,153 +2,302 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Music & Microphone Speaker</title>
+  <title>🎵 Camcookie Music</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
-      font-family: sans-serif;
-      background: #111;
+    html, body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: radial-gradient(circle at center, #001133, #000010);
       color: #fff;
-      text-align: center;
-      padding: 30px;
+      height: 100vh;
+      overflow: hidden;
     }
-    h1 {
-      color: #00ccff;
-      margin-bottom: 20px;
-    }
-    .song {
+
+    .panel {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      margin: 15px auto;
-      max-width: 600px;
-      background: #222;
-      padding: 10px;
-      border-radius: 10px;
+      justify-content: center;
+      background: radial-gradient(#001a3d, #000);
+      transition: background 1s ease;
     }
-    .song img {
+
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+      color: #00ccff;
+      font-weight: 600;
+      text-shadow: 0 0 6px #00ccff88;
+    }
+
+    #logo {
       width: 80px;
       height: 80px;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      image-rendering: auto;
+    }
+
+    img.cover {
+      width: 260px;
+      height: 260px;
       object-fit: cover;
-      border-radius: 8px;
-      margin-right: 15px;
+      border-radius: 16px;
+      margin: 20px 0;
+      box-shadow: 0 0 20px #00ccff33;
     }
-    .song-title {
-      flex-grow: 1;
-      text-align: left;
+
+    #songTitle {
+      font-size: 1.1rem;
+      margin: 10px;
+      text-align: center;
     }
+
     audio {
-      width: 100%;
-      margin-top: 5px;
+      width: 80%;
+      max-width: 400px;
+      opacity: 0;
+      transition: opacity 1s;
     }
-    #micBtn {
-      margin-top: 30px;
-      padding: 15px 30px;
-      background-color: #00ccff;
+
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      background: #00ccff;
       border: none;
+      padding: 12px 18px;
+      font-size: 16px;
       border-radius: 8px;
-      font-size: 18px;
-      color: #000;
+      color: black;
       cursor: pointer;
+      transition: background 0.2s;
+      font-weight: bold;
+      box-shadow: 0 0 10px #00ccff44;
     }
-    #micBtn:hover {
-      background-color: #0099cc;
+
+    button:hover {
+      background: #0099cc;
     }
+
+    .liked {
+      background: #00ff88 !important;
+    }
+
+    .disliked {
+      background: #ff3344 !important;
+    }
+
+    #status {
+      position: absolute;
+      top: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.5s;
+      pointer-events: none;
+    }
+
   </style>
 </head>
 <body>
-  <h1>🎵 Music & Mic Speaker</h1>
-  <div id="playlist"></div>
-  <button id="micBtn">🎤 Talk Mode</button>
+  <div class="panel" id="mainPanel">
+    <div id="status">Status</div>
+    <img id="logo" src="assets/Camcookie-logo.png" alt="Camcookie Music Logo" />
+    <h1>🎧 Camcookie Music</h1>
+    <img id="cover" class="cover" src="" alt="Album Cover" />
+    <div id="songTitle">Loading...</div>
+    <audio id="audio" autoplay></audio>
+
+    <div class="controls">
+      <button onclick="prevSong()">⏮️</button>
+      <button onclick="togglePlay()">⏯️</button>
+      <button onclick="nextSong()">⏭️</button>
+      <button id="likeBtn" onclick="likeSong()">👍</button>
+      <button id="dislikeBtn" onclick="dislikeSong()">👎</button>
+      <button onclick="toggleMic()">🎤</button>
+    </div>
+  </div>
 
   <script>
     const songs = [
-      ["AllStar", "AllStar.mp3", "AllStar.jpg"],
-      ["Be Someone", "Be Someone.mp3", "Be Someone.jpg"],
-      ["Cupid Shuffle (New Style)", "Cupid Shuffle (New Style).mp3", "Cupid Shuffle (New Style).jpg"],
-      ["Dynamite", "Dynamite.mp3", "Dynamite.jpg"],
-      ["Girls Like You", "Girls Like You.mp3", "Girls Like You.jpg"],
-      ["HandClap", "HandClap.mp3", "HandClap.jpg"],
-      ["If I Can't Have You", "If I Can't Have You.mp3", "If I Can't Have You.jpg"],
-      ["Just Dance - Lady Gaga", "Just Dance - Lady Gaga.mp3", "Just Dance - Lady Gaga.jpg"],
-      ["Made You Look", "Made You Look.mp3", "Made You Look.jpg"],
-      ["Oops!... I Did It Again", "Oops... I Did It Again.mp3", "Oops!... I Did It Again.jpg"],
-      ["Party Rock Anthem", "Party rock anthem.mp3", "Party Rock Anthem.jpg"],
-      ["Pink Pony Club", "Pink Pony Club.mp3", "Pink Pony Club.jpg"],
-      ["Run It", "Run It.mp3", "Run It.jpg"],
-      ["September", "September.mp3", "September.jpg"],
-      ["Shut Up and Dance", "Shut Up and Dance.mp3", "Shut Up and Dance.jpg"],
-      ["Sixteen", "Sixteen.mp3", "Sixteen.jpg"],
-      ["Sk8ter Boi", "Sk8ter Boi.mp3", "Sk8er Boi.jpg"],
-      ["Spice Up Your Life", "Spice Up Your Life.mp3", "Spice Up Your Life.jpg"],
-      ["Stars In The Sky", "stars in the sky.mp3", "Stars In The Sky.jpg"],
-      ["Sugar", "Sugar.mp3", "Sugar.jpg"],
-      ["Sunroof", "Sunroof.mp3", "Sunroof.jpg"],
-      ["tearin’ up my heart", "tearin’ up my heart.mp3", "tearin’ up my heart.jpg"],
-      ["Toxic", "Toxic.mp3", "Toxic.jpg"],
-      ["Welcome To New York", "Welcome To New York (Taylor's Version).mp3", "Welcome To New York (Taylor's Version).jpg"],
-      ["What A Girl Wants", "What A Girl Wants.mp3", "What a Girl Wants.jpg"],
-      ["Whistle", "Whistle.m3u", "Whistle.jpg"]
+      ["AllStar", "AllStar.mp3", "AllStar.jpg", "pop"],
+      ["Be Someone", "Be Someone.mp3", "Be Someone.jpg", "indie"],
+      ["Cupid Shuffle", "Cupid Shuffle (New Style).mp3", "Cupid Shuffle (New Style).jpg", "dance"],
+      ["Dynamite", "Dynamite.mp3", "Dynamite.jpg", "pop"],
+      ["Girls Like You", "Girls Like You.mp3", "Girls Like You.jpg", "romance"],
+      ["HandClap", "HandClap.mp3", "HandClap.jpg", "rock"],
+      ["Sugar", "Sugar.mp3", "Sugar.jpg", "pop"],
+      ["Sunroof", "Sunroof.mp3", "Sunroof.jpg", "indie"],
+      ["Sk8ter Boi", "Sk8ter Boi.mp3", "Sk8er Boi.jpg", "punk"],
+      ["What A Girl Wants", "What A Girl Wants.mp3", "What a Girl Wants.jpg", "romance"],
+      ["Stars in the Sky", "stars in the sky.mp3", "Stars In The Sky.jpg", "electro"],
+      ["Party Rock Anthem", "Party rock anthem.mp3", "Party Rock Anthem.jpg", "dance"]
     ];
 
-    const playlistDiv = document.getElementById("playlist");
-    let audioElements = [];
+    const genreThemes = {
+      pop: "#001f3f",
+      indie: "#0f0c29",
+      dance: "#1a0033",
+      punk: "#330000",
+      romance: "#330033",
+      rock: "#002222",
+      electro: "#001a3d"
+    };
 
-    songs.forEach(([title, mp3, img]) => {
-      const songDiv = document.createElement("div");
-      songDiv.className = "song";
+    const audio = document.getElementById("audio");
+    const cover = document.getElementById("cover");
+    const title = document.getElementById("songTitle");
+    const panel = document.getElementById("mainPanel");
+    const likeBtn = document.getElementById("likeBtn");
+    const dislikeBtn = document.getElementById("dislikeBtn");
+    const status = document.getElementById("status");
 
-      const image = document.createElement("img");
-      image.src = `assets/${img}`;
-      image.alt = title;
+    let currentIndex = -1;
+    let likedSongs = JSON.parse(localStorage.getItem("likedSongs") || "[]");
+    let dislikedSongs = JSON.parse(localStorage.getItem("dislikedSongs") || "[]");
+    let micStream = null;
 
-      const infoDiv = document.createElement("div");
-      infoDiv.className = "song-title";
-      infoDiv.innerHTML = `<strong>${title}</strong><br><audio controls src="assets/${mp3}"></audio>`;
+    function showStatus(text) {
+      status.textContent = text;
+      status.style.opacity = 1;
+      clearTimeout(status._hideTimeout);
+      status._hideTimeout = setTimeout(() => {
+        status.style.opacity = 0;
+      }, 2000);
+    }
 
-      songDiv.appendChild(image);
-      songDiv.appendChild(infoDiv);
-      playlistDiv.appendChild(songDiv);
+    function fadeInAudio() {
+      audio.volume = 0;
+      audio.style.opacity = 1;
+      let fade = setInterval(() => {
+        if (audio.volume < 1) audio.volume = Math.min(1, audio.volume + 0.05);
+        else clearInterval(fade);
+      }, 100);
+    }
 
-      audioElements.push(infoDiv.querySelector("audio"));
-    });
-
-    // 🎤 Microphone logic
-    const micBtn = document.getElementById("micBtn");
-    let micOn = false;
-    let micStream;
-    let micSource;
-    let micOutput;
-
-    micBtn.addEventListener("click", async () => {
-      if (!micOn) {
-        // Pause all songs
-        audioElements.forEach(audio => audio.pause());
-
-        try {
-          micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          const audioCtx = new AudioContext();
-          micSource = audioCtx.createMediaStreamSource(micStream);
-          micOutput = audioCtx.createMediaStreamDestination();
-
-          micSource.connect(audioCtx.destination); // Output to speakers
-          micBtn.textContent = "🔇 End Talk and Resume Music";
-          micOn = true;
-        } catch (err) {
-          alert("Microphone access denied or error.");
+    function fadeOutAudio(callback) {
+      let fade = setInterval(() => {
+        if (audio.volume > 0.05) audio.volume -= 0.05;
+        else {
+          clearInterval(fade);
+          audio.volume = 0;
+          audio.pause();
+          audio.style.opacity = 0;
+          callback();
         }
-      } else {
-        // Stop mic
-        micStream.getTracks().forEach(track => track.stop());
-        micBtn.textContent = "🎤 Talk Mode";
-        micOn = false;
+      }, 100);
+    }
 
-        // Resume all paused music
-        audioElements.forEach(audio => {
-          if (audio.currentTime > 0 && !audio.ended) {
-            audio.play();
-          }
+    function loadSong(index) {
+      const [name, file, image, genre] = songs[index];
+      audio.src = `assets/${file}`;
+      cover.src = `assets/${image}`;
+      title.textContent = name;
+      panel.style.background = genreThemes[genre] || "#001133";
+      updateLikeButtons(index);
+    }
+
+    function playRandomSong() {
+      const options = songs.filter((_, i) => !dislikedSongs.includes(i));
+      if (options.length === 0) {
+        showStatus("😅 All songs disliked!");
+        return;
+      }
+      const randomIndex = Math.floor(Math.random() * options.length);
+      currentIndex = songs.indexOf(options[randomIndex]);
+      loadSong(currentIndex);
+      setTimeout(() => {
+        audio.play();
+        fadeInAudio();
+      }, 300);
+    }
+
+    function togglePlay() {
+      if (audio.paused) {
+        audio.play();
+        fadeInAudio();
+      } else {
+        fadeOutAudio(() => {});
+      }
+    }
+
+    function nextSong() {
+      fadeOutAudio(() => playRandomSong());
+    }
+
+    function prevSong() {
+      currentIndex = (currentIndex - 1 + songs.length) % songs.length;
+      loadSong(currentIndex);
+      setTimeout(() => {
+        audio.play();
+        fadeInAudio();
+      }, 200);
+    }
+
+    function likeSong() {
+      if (!likedSongs.includes(currentIndex)) likedSongs.push(currentIndex);
+      dislikedSongs = dislikedSongs.filter(i => i !== currentIndex);
+      savePrefs();
+      updateLikeButtons(currentIndex);
+      showStatus("👍 Liked");
+    }
+
+    function dislikeSong() {
+      if (!dislikedSongs.includes(currentIndex)) dislikedSongs.push(currentIndex);
+      likedSongs = likedSongs.filter(i => i !== currentIndex);
+      savePrefs();
+      updateLikeButtons(currentIndex);
+      showStatus("👎 Disliked");
+      nextSong();
+    }
+
+    function updateLikeButtons(index) {
+      likeBtn.classList.toggle("liked", likedSongs.includes(index));
+      dislikeBtn.classList.toggle("disliked", dislikedSongs.includes(index));
+    }
+
+    function savePrefs() {
+      localStorage.setItem("likedSongs", JSON.stringify(likedSongs));
+      localStorage.setItem("dislikedSongs", JSON.stringify(dislikedSongs));
+    }
+
+    function toggleMic() {
+      if (micStream) {
+        micStream.getTracks().forEach(t => t.stop());
+        micStream = null;
+        audio.play();
+        fadeInAudio();
+        showStatus("🎤 Mic OFF");
+      } else {
+        fadeOutAudio(() => {
+          navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            micStream = stream;
+            const ctx = new AudioContext();
+            const source = ctx.createMediaStreamSource(stream);
+            source.connect(ctx.destination);
+            showStatus("🎤 Mic ON");
+          }).catch(() => showStatus("⚠️ Mic error"));
         });
       }
-    });
+    }
+
+    audio.onended = () => {
+      nextSong();
+    };
+
+    playRandomSong();
   </script>
 </body>
 </html>
