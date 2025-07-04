@@ -2,21 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>🎵 Camcookie Music</title>
+  <title>Camcookie Music</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="library/Camcookie-logo.png" type="image/png" />
   <style>
     html, body {
       margin: 0; padding: 0;
       height: 100vh; overflow: hidden;
-      transition: background 0.5s ease;
       font-family: 'Segoe UI', sans-serif;
-      color: #fff;
+      background: #000; color: #fff;
+      transition: background 0.5s ease;
     }
     #mainPanel {
-      position: relative;
-      width: 100%; height: 100%;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
+      height: 100vh; width: 100vw;
+      padding: 20px;
     }
     #logo {
       position: absolute; top: 20px; left: 20px;
@@ -24,8 +25,7 @@
     }
     h1 {
       margin-top: 80px;
-      font-size: 2rem; color: #fff;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      font-size: 2rem;
     }
     img.cover {
       width: 240px; height: 240px;
@@ -36,7 +36,6 @@
     #songTitle {
       font-size: 1.2rem;
       text-align: center;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
     .controls {
       margin-top: 20px;
@@ -54,55 +53,106 @@
     .controls button:hover {
       background: rgba(255,255,255,1);
     }
+    .liked {
+      background: #4CAF50 !important;
+      color: white;
+    }
+    .disliked {
+      background: #F44336 !important;
+      color: white;
+    }
     #status {
       position: absolute; top: 20px; right: 20px;
       background: rgba(0,0,0,0.5);
       padding: 8px 12px; border-radius: 6px;
       opacity: 0; transition: opacity 0.3s;
-      color: #fff;
+    }
+    #progressContainer {
+      width: 80%; max-width: 400px;
+      margin-top: 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    #progressBar {
+      flex: 1;
+      height: 6px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+      position: relative;
+      cursor: pointer;
+    }
+    #progressFill {
+      height: 100%;
+      width: 0%;
+      background: #fff;
+      border-radius: 3px;
+    }
+    #timeDisplay {
+      font-size: 0.9rem;
+      width: 60px;
+      text-align: right;
     }
     #playlistOverlay {
-      display: none; position: fixed;
-      top:0; left:0; width:100vw; height:100vh;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px);
-      flex-direction: column; align-items: center;
-      padding: 40px 20px; overflow-y: auto;
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.9);
+      color: white;
+      padding: 40px 20px;
+      overflow-y: auto;
     }
     #playlistOverlay .header {
-      width: 100%; display: flex; justify-content: space-between;
-      margin-bottom: 24px;
+      display: flex; justify-content: space-between;
+      margin-bottom: 20px;
     }
     #playlistOverlay button {
-      background: #fff; color: #333;
-      padding: 10px 16px; border: none;
+      background: #fff; color: #000;
+      border: none; padding: 10px 16px;
       border-radius: 6px; cursor: pointer;
     }
     #playlist {
-      width: 100%; max-width: 480px;
-      list-style: none; padding: 0; margin: 0;
+      list-style: none; padding: 0;
+      max-width: 500px; margin: 0 auto;
     }
     #playlist li {
       padding: 12px 16px;
       margin-bottom: 8px;
-      background: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.1);
       border-radius: 6px;
+      display: flex; justify-content: space-between;
+      align-items: center;
       cursor: pointer;
-      transition: background 0.2s;
     }
     #playlist li:hover {
-      background: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.2);
     }
+    .thumbs {
+      display: flex; gap: 8px;
+    }
+    .thumbs button {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .thumbs .liked { color: #4CAF50; }
+    .thumbs .disliked { color: #F44336; }
   </style>
 </head>
 <body>
 
   <div id="mainPanel">
     <img id="logo" src="library/Camcookie-logo.png" alt="Camcookie Logo" />
-    <h1>🎧 Camcookie Music</h1>
+    <h1>Camcookie Music</h1>
     <img id="cover" class="cover" src="" alt="Album Cover" />
     <div id="songTitle">Loading…</div>
     <audio id="audio" autoplay></audio>
+
+    <div id="progressContainer">
+      <div id="progressBar"><div id="progressFill"></div></div>
+      <div id="timeDisplay">0:00</div>
+    </div>
 
     <div class="controls">
       <button onclick="prevSong()">⏮️</button>
@@ -118,195 +168,258 @@
 
   <div id="playlistOverlay">
     <div class="header">
-      <button onclick="closePlaylist()">✖️ Close</button>
-      <button onclick="startPlaylist()">▶️ Play All</button>
+      <button onclick="closePlaylist()">Close</button>
+      <button onclick="startPlaylist()">Play All</button>
     </div>
     <ul id="playlist"></ul>
   </div>
 
   <script>
-    const baseURL     = "library/";
-    const audio       = document.getElementById("audio");
-    const cover       = document.getElementById("cover");
-    const title       = document.getElementById("songTitle");
-    const panel       = document.body;        // change body background
-    const likeBtn     = document.getElementById("likeBtn");
-    const dislikeBtn  = document.getElementById("dislikeBtn");
-    const status      = document.getElementById("status");
-    const overlay     = document.getElementById("playlistOverlay");
-    const playlistEl  = document.getElementById("playlist");
+    // Element references
+const baseURL       = "library/";
+const audio         = document.getElementById("audio");
+const cover         = document.getElementById("cover");
+const titleEl       = document.getElementById("songTitle");
+const likeBtn       = document.getElementById("likeBtn");
+const dislikeBtn    = document.getElementById("dislikeBtn");
+const statusEl      = document.getElementById("status");
+const overlay       = document.getElementById("playlistOverlay");
+const playlistEl    = document.getElementById("playlist");
+const progressBar   = document.getElementById("progressBar");
+const progressFill  = document.getElementById("progressFill");
+const timeDisplay   = document.getElementById("timeDisplay");
 
-    let currentIndex  = -1;
-    let likedSongs    = JSON.parse(localStorage.getItem("likedSongs")    || "[]");
-    let dislikedSongs = JSON.parse(localStorage.getItem("dislikedSongs") || "[]");
-    let micStream     = null;
-    let playlistMode  = false;
-    let roundSongs    = [];
-    let isFading      = false;
+let currentIndex  = -1;
+let likedSongs    = JSON.parse(localStorage.getItem("likedSongs")    || "[]");
+let dislikedSongs = JSON.parse(localStorage.getItem("dislikedSongs") || "[]");
+let playlistMode  = false;
+let roundSongs    = [];
 
-    // [ name, file, img, genre, hexColor ]
-    const songs = [
-      ["AllStar", "AllStar.mp3", "AllStar.jpg", "pop", "#F4C542"],
-      ["Be Someone", "Be Someone.mp3", "Be Someone.jpg", "indie", "#55C57A"],
-      ["Call Me Maybe","Call Me Maybe.mp3","Call Me Maybe.jpg","pop","#FF6F91"],
-      ["Count on Me","Count on me.mp3","Count on me.jpg","pop","#4FB0C6"],
-      ["Dynamite","Dynamite.mp3","Dynamite.jpg","pop","#F15A29"],
-      ["Girls Like You","Girls Like You.mp3","Girls Like You.jpg","romance","#D94E70"],
-      ["HandClap","HandClap.mp3","HandClap.jpg","rock","#7D3C98"],
-      ["I Gotta a Feeling","I gotta a feeling.mp3","I gotta a feeling.jpg","pop","#2ECC71"],
-      ["I Really Like You","I Really Like You.mp3","I Really Like You.jpg","pop","#3498DB"],
-      ["If I Can't Have You","If I Can't Have You.mp3","If I Can't Have You.jpg","pop","#E67E22"],
-      ["Just Dance - Lady Gaga","Just Dance - Lady Gaga.mp3","Just Dance - Lady Gaga.jpg","dance","#9B59B6"],
-      ["Made You Look","Made You Look.mp3","Made You Look.jpg","pop","#FF5733"],
-      ["Oops... I Did It Again","Oops... I Did It Again.mp3","Oops... I Did It Again.jpg","pop","#C0392B"],
-      ["Party Rock Anthem","Party rock anthem.mp3","Party Rock Anthem.jpg","dance","#F7DC6F"],
-      ["Pink Pony Club","Pink Pony Club.mp3","Pink Pony Club.jpg","pop","#F8C8DC"],
-      ["Run It","Run It.mp3","Run It.jpg","pop","#BB8FCE"],
-      ["September","September.mp3","September.jpg","dance","#D35400"],
-      ["Shut Up and Dance","Shut Up and Dance.mp3","Shut Up and Dance.jpg","dance","#EC7063"],
-      ["Sixteen","Sixteen.mp3","Sixteen.jpg","rock","#6E2C00"],
-      ["Sk8er Boi","Sk8ter Boi.mp3","Sk8er Boi.jpg","punk","#566573"],
-      ["Spice Up Your Life","Spice Up Your Life.mp3","Spice Up Your Life.jpg","pop","#FFA07A"],
-      ["Stars in the Sky","stars in the sky.mp3","Stars In The Sky.jpg","electro","#85C1E9"],
-      ["Sugar","Sugar.mp3","Sugar.jpg","pop","#FAD7A0"],
-      ["Sunroof","Sunroof.mp3","Sunroof.jpg","indie","#F7DC6F"],
-      ["Tearin’ Up My Heart","tearin’ up my heart.mp3","tearin’ up my heart.jpg","pop","#FF1493"],
-      ["Toxic","Toxic.mp3","Toxic.jpg","pop","#7DCEA0"],
-      ["Dance Monkey", "Dance Monkey.mp3", "Dance Monkey.jpg", "dance", "#00BFFF"],
-      ["We Are Never Ever Getting Back Together","We Are Never Ever Getting Back Together.mp3","We Are Never Ever Getting Back Together.jpg","romance","#F5B7B1"],
-      ["Welcome To New York (Taylor's Version)","Welcome To New York (Taylor's Version).mp3","Welcome To New York (Taylor's Version).jpg","pop","#A9CCE3"],
-      ["What A Girl Wants","What A Girl Wants.mp3","What A Girl Wants.jpg","romance","#F5CBA7"],
-      ["Whistle","Whistle.mp3","Whistle.jpg","pop","#85C1E9"]
-    ];
+// [ name, file, img, genre, hexColor ]
+const songs = [
+  ["AllStar", "AllStar.mp3", "AllStar.jpg", "pop", "#F4C542"],
+  ["Be Someone", "Be Someone.mp3", "Be Someone.jpg", "indie", "#55C57A"],
+  ["Call Me Maybe", "Call Me Maybe.mp3", "Call Me Maybe.jpg", "pop", "#FF6F91"],
+  ["Count on Me", "Count on me.mp3", "Count on me.jpg", "pop", "#4FB0C6"],
+  ["Cupid Shuffle (New Style)", "Cupid Shuffle (New Style).mp3", "Cupid Shuffle (New Style).jpg", "dance", "#E67A7A"],
+  ["Dynamite", "Dynamite.mp3", "Dynamite.jpg", "pop", "#F15A29"],
+  ["Girls Like You", "Girls Like You.mp3", "Girls Like You.jpg", "romance", "#D94E70"],
+  ["HandClap", "HandClap.mp3", "HandClap.jpg", "rock", "#7D3C98"],
+  ["I Gotta a Feeling", "I gotta a feeling.mp3", "I gotta a feeling.jpg", "pop", "#2ECC71"],
+  ["I Really Like You", "I Really Like You.mp3", "I Really Like You.jpg", "pop", "#3498DB"],
+  ["If I Can't Have You", "If I Can't Have You.mp3", "If I Can't Have You.jpg", "pop", "#E67E22"],
+  ["Just Dance - Lady Gaga", "Just Dance - Lady Gaga.mp3", "Just Dance - Lady Gaga.jpg", "dance", "#9B59B6"],
+  ["Made You Look", "Made You Look.mp3", "Made You Look.jpg", "pop", "#FF5733"],
+  ["Oops... I Did It Again", "Oops... I Did It Again.mp3", "Oops... I Did It Again.jpg", "pop", "#C0392B"],
+  ["Party Rock Anthem", "Party rock anthem.mp3", "Party Rock Anthem.jpg", "dance", "#F7DC6F"],
+  ["Pink Pony Club", "Pink Pony Club.mp3", "Pink Pony Club.jpg", "pop", "#F8C8DC"],
+  ["Run It", "Run It.mp3", "Run It.jpg", "pop", "#BB8FCE"],
+  ["September", "September.mp3", "September.jpg", "dance", "#D35400"],
+  ["Shut Up and Dance", "Shut Up and Dance.mp3", "Shut Up and Dance.jpg", "dance", "#EC7063"],
+  ["Sixteen", "Sixteen.mp3", "Sixteen.jpg", "rock", "#6E2C00"],
+  ["Sk8er Boi", "Sk8ter Boi.mp3", "Sk8er Boi.jpg", "punk", "#566573"],
+  ["Spice Up Your Life", "Spice Up Your Life.mp3", "Spice Up Your Life.jpg", "pop", "#FFA07A"],
+  ["Stars in the Sky", "stars in the sky.mp3", "Stars In The Sky.jpg", "electro", "#85C1E9"],
+  ["Sugar", "Sugar.mp3", "Sugar.jpg", "pop", "#FAD7A0"],
+  ["Sunroof", "Sunroof.mp3", "Sunroof.jpg", "indie", "#F7DC6F"],
+  ["Tearin’ Up My Heart", "tearin’ up my heart.mp3", "tearin’ up my heart.jpg", "pop", "#FF1493"],
+  ["Toxic", "Toxic.mp3", "Toxic.jpg", "pop", "#7DCEA0"],
+  ["We Are Never Ever Getting Back Together", "We Are Never Ever Getting Back Together.mp3", "We Are Never Ever Getting Back Together.jpg", "romance", "#F5B7B1"],
+  ["Welcome To New York (Taylor's Version)", "Welcome To New York (Taylor's Version).mp3", "Welcome To New York (Taylor's Version).jpg", "pop", "#A9CCE3"],
+  ["What A Girl Wants", "What A Girl Wants.mp3", "What A Girl Wants.jpg", "romance", "#F5CBA7"],
+  ["Whistle", "Whistle.mp3", "Whistle.jpg", "pop", "#85C1E9"],
+  ["Dance Monkey", "Dance Monkey.mp3", "Dance Monkey.jpg", "dance", "#00BFFF"]
+];
 
-    function showStatus(txt) {
-      status.textContent = txt;
-      status.style.opacity = 1;
-      clearTimeout(status._hide);
-      status._hide = setTimeout(() => status.style.opacity = 0, 1500);
-    }
+// Utilities
+function showStatus(text) {
+  statusEl.textContent = text;
+  statusEl.style.opacity = 1;
+  clearTimeout(statusEl._hide);
+  statusEl._hide = setTimeout(() => statusEl.style.opacity = 0, 1500);
+}
 
-    function fadeInAudio() {
-      audio.volume = 0; audio.style.opacity = 1; isFading = true;
-      let iv = setInterval(() => {
-        audio.volume = Math.min(1, audio.volume + 0.05);
-        if (audio.volume >= 1) { clearInterval(iv); isFading = false; }
-      }, 100);
-    }
+function updateTitle(name) {
+  document.title = `${name} - Camcookie Music`;
+}
 
-    function fadeOutAudio(cb) {
-      isFading = true;
-      let iv = setInterval(() => {
-        audio.volume -= 0.05;
-        if (audio.volume <= 0.05) {
-          clearInterval(iv);
-          audio.pause(); audio.style.opacity = 0; isFading = false;
-          cb();
-        }
-      }, 100);
-    }
+function savePrefs() {
+  localStorage.setItem("likedSongs",    JSON.stringify(likedSongs));
+  localStorage.setItem("dislikedSongs", JSON.stringify(dislikedSongs));
+}
 
-    function initRound() {
-      roundSongs = songs.map((_, i) => i)
-                        .filter(i => !dislikedSongs.includes(i));
-    }
+function updateLikeButtons(index) {
+  likeBtn.classList.toggle("liked", likedSongs.includes(index));
+  dislikeBtn.classList.toggle("disliked", dislikedSongs.includes(index));
+}
 
-    function playRandom() {
-      if (!roundSongs.length) initRound();
-      const pick = Math.floor(Math.random() * roundSongs.length);
-      const idx  = roundSongs.splice(pick, 1)[0];
-      currentIndex = idx;
-      loadSong(idx);
-      setTimeout(() => { audio.play(); fadeInAudio(); }, 300);
-    }
+// Playback & Navigation
+function initRound() {
+  roundSongs = songs.map((_, i) => i)
+                    .filter(i => !dislikedSongs.includes(i));
+}
 
-    function loadSong(i) {
-      const [name, file, img, , color] = songs[i];
-      audio.src = baseURL + file;
-      cover.src = baseURL + img;
-      title.textContent = name;
-      panel.style.background = color;
-      updateLikeButtons(i);
-    }
+function loadSong(i) {
+  const [name, file, img, , color] = songs[i];
+  currentIndex = i;
+  audio.src       = baseURL + file;
+  cover.src       = baseURL + img;
+  titleEl.textContent = name;
+  document.body.style.background = color;
+  updateTitle(name);
+  updateLikeButtons(i);
+}
 
-    function togglePlay() {
-      if (isFading) return;
-      if (audio.paused) { audio.play(); fadeInAudio(); showStatus("▶️ Playing"); }
-      else           { audio.pause(); showStatus("⏸️ Paused"); }
-    }
+function playSong() {
+  audio.play();
+  showStatus("Playing");
+}
 
-    function nextSong() {
-      if (playlistMode) {
-        currentIndex = (currentIndex + 1) % songs.length;
-        loadSong(currentIndex);
-        setTimeout(() => { audio.play(); fadeInAudio(); }, 200);
-      } else fadeOutAudio(playRandom);
-    }
+function togglePlay() {
+  if (audio.paused) playSong();
+  else {
+    audio.pause();
+    showStatus("Paused");
+  }
+}
 
-    function prevSong() {
-      if (!playlistMode) return;
-      currentIndex = (currentIndex - 1 + songs.length) % songs.length;
-      loadSong(currentIndex);
-      setTimeout(() => { audio.play(); fadeInAudio(); }, 200);
-    }
+function nextSong() {
+  if (playlistMode) {
+    currentIndex = (currentIndex + 1) % songs.length;
+    loadSong(currentIndex);
+    playSong();
+  } else {
+    if (!roundSongs.length) initRound();
+    const pick = Math.floor(Math.random() * roundSongs.length);
+    const idx  = roundSongs.splice(pick, 1)[0];
+    loadSong(idx);
+    playSong();
+  }
+}
 
-    function likeSong() {
-      if (!likedSongs.includes(currentIndex)) likedSongs.push(currentIndex);
-      dislikedSongs = dislikedSongs.filter(i => i !== currentIndex);
-      savePrefs(); updateLikeButtons(currentIndex); showStatus("👍 Liked");
-    }
+function prevSong() {
+  if (!playlistMode) return;
+  currentIndex = (currentIndex - 1 + songs.length) % songs.length;
+  loadSong(currentIndex);
+  playSong();
+}
 
-    function dislikeSong() {
-      if (!dislikedSongs.includes(currentIndex)) dislikedSongs.push(currentIndex);
-      likedSongs = likedSongs.filter(i => i !== currentIndex);
-      savePrefs(); updateLikeButtons(currentIndex); showStatus("👎 Disliked");
-      if (!playlistMode) nextSong();
-    }
+// Like / Dislike
+function likeSong() {
+  if (likedSongs.includes(currentIndex)) {
+    likedSongs = likedSongs.filter(i => i !== currentIndex);
+  } else {
+    likedSongs.push(currentIndex);
+    dislikedSongs = dislikedSongs.filter(i => i !== currentIndex);
+  }
+  savePrefs();
+  updateLikeButtons(currentIndex);
+  showStatus("Liked");
+}
 
-    function updateLikeButtons(i) {
-      likeBtn.classList.toggle("liked", likedSongs.includes(i));
-      dislikeBtn.classList.toggle("disliked", dislikedSongs.includes(i));
-    }
+function dislikeSong() {
+  if (dislikedSongs.includes(currentIndex)) {
+    dislikedSongs = dislikedSongs.filter(i => i !== currentIndex);
+  } else {
+    dislikedSongs.push(currentIndex);
+    likedSongs = likedSongs.filter(i => i !== currentIndex);
+  }
+  savePrefs();
+  updateLikeButtons(currentIndex);
+  showStatus("Disliked");
+  if (!playlistMode) nextSong();
+}
 
-    function savePrefs() {
-      localStorage.setItem("likedSongs",    JSON.stringify(likedSongs));
-      localStorage.setItem("dislikedSongs", JSON.stringify(dislikedSongs));
-    }
-
-    function openPlaylist()  { overlay.style.display = "flex"; }
-    function closePlaylist() { overlay.style.display = "none"; }
-
-    function buildPlaylist() {
-      songs.forEach((s,i) => {
-        const li = document.createElement("li");
-        li.textContent = s[0];
-        li.onclick = () => {
-          playlistMode = true;
-          currentIndex = i;
-          loadSong(i);
-          audio.play();
-          fadeInAudio();
-          closePlaylist();
-        };
-        playlistEl.appendChild(li);
-      });
-    }
-
-    function startPlaylist() {
+// Playlist UI
+function buildPlaylist() {
+  playlistEl.innerHTML = "";
+  songs.forEach((s, i) => {
+    const li = document.createElement("li");
+    li.textContent = s[0];
+    li.onclick = () => {
       playlistMode = true;
-      currentIndex = 0;
-      loadSong(0);
-      audio.play();
-      fadeInAudio();
+      loadSong(i);
+      playSong();
       closePlaylist();
-    }
+    };
+    // thumbs container
+    const thumbs = document.createElement("div");
+    thumbs.className = "thumbs";
+    // up
+    const up = document.createElement("button");
+    up.textContent = "👍";
+    up.className = likedSongs.includes(i) ? "liked" : "";
+    up.onclick = e => {
+      e.stopPropagation();
+      likeSongIndex(i);
+      buildPlaylist();
+    };
+    // down
+    const down = document.createElement("button");
+    down.textContent = "👎";
+    down.className = dislikedSongs.includes(i) ? "disliked" : "";
+    down.onclick = e => {
+      e.stopPropagation();
+      dislikeSongIndex(i);
+      buildPlaylist();
+    };
+    thumbs.append(up, down);
+    li.appendChild(thumbs);
+    playlistEl.appendChild(li);
+  });
+}
 
-    audio.onended = () => { if (!audio.loop) nextSong(); };
+function openPlaylist()  { overlay.style.display = "block"; buildPlaylist(); }
+function closePlaylist() { overlay.style.display = "none"; }
 
-    // initialize
-    buildPlaylist();
-    initRound();
-    playRandom();
+function startPlaylist() {
+  playlistMode = true;
+  loadSong(0);
+  playSong();
+  closePlaylist();
+}
+
+// Helpers for playlist thumbs
+function likeSongIndex(i) {
+  if (likedSongs.includes(i)) likedSongs = likedSongs.filter(x => x !== i);
+  else {
+    likedSongs.push(i);
+    dislikedSongs = dislikedSongs.filter(x => x !== i);
+  }
+  savePrefs();
+}
+function dislikeSongIndex(i) {
+  if (dislikedSongs.includes(i)) dislikedSongs = dislikedSongs.filter(x => x !== i);
+  else {
+    dislikedSongs.push(i);
+    likedSongs = likedSongs.filter(x => x !== i);
+  }
+  savePrefs();
+}
+
+// Timeline & seeking
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+audio.ontimeupdate = () => {
+  const pct = (audio.currentTime / audio.duration) * 100 || 0;
+  progressFill.style.width = `${pct}%`;
+  timeDisplay.textContent = formatTime(audio.currentTime);
+};
+progressBar.onclick = e => {
+  const rect = progressBar.getBoundingClientRect();
+  const pct  = (e.clientX - rect.left) / rect.width;
+  audio.currentTime = pct * audio.duration;
+};
+
+// Auto-next
+audio.onended = () => { if (!audio.loop) nextSong(); };
+
+// Init playback
+initRound();
+nextSong();
   </script>
-</body>
+  </body>
 </html>
